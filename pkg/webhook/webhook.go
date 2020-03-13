@@ -74,15 +74,18 @@ func (v *ValidatingHook) Handle(ctx context.Context, req admission.Request) (res
 	createHooks[statefulSetGVK] = v.StatefulSetCreateHook
 	createHooks[daemonSetGVK] = v.DaemonSetCreateHook
 	createHooks[podGVK] = v.PodCreateHook
+	createHooks[vmGVK] = v.VirtualMachineCreateHook
 
 	updateHooks[deploymentGVK] = v.DeploymentUpdateHook
 	updateHooks[statefulSetGVK] = v.StatefulSetUpdateHook
 	updateHooks[daemonSetGVK] = v.DaemonSetUpdateHook
+	updateHooks[vmGVK] = v.VirtualMachineUpdateHook
 
 	deleteHooks[deploymentGVK] = v.DeploymentDeleteHook
 	deleteHooks[statefulSetGVK] = v.StatefulSetDeleteHook
 	deleteHooks[daemonSetGVK] = v.DaemonSetDeleteHook
 	deleteHooks[podGVK] = v.PodDeleteHook
+	deleteHooks[vmGVK] = v.VirtualMachineDeleteHook
 
 	switch req.Operation {
 	case admissionv1beta1.Create:
