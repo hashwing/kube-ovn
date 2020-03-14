@@ -1,0 +1,41 @@
+FROM golang:1.13.4 as builder
+
+COPY ./ /kube-ovn
+
+WORKDIR /kube-ovn
+
+RUN ls 
+RUN CGO_ENABLED=0 GOOS=linux go build -mod vendor -o dist/images/kube-ovn-webhook -ldflags "-w -s" -v ./cmd/webhook
+
+FROM centos:7
+
+ENV PYTHONDONTWRITEBYTECODE yes
+
+RUN yum install -y  \
+        PyYAML bind-utils \
+        openssl \
+        numactl-libs \
+        firewalld-filesystem \
+        libpcap \
+        hostname \
+        iproute strace socat nc \
+        unbound unbound-devel && \
+        yum clean all
+
+ENV OVS_VERSION=2.12.0
+ENV OVS_SUBVERSION=5
+
+RUN rpm -ivh https://github.com/alauda/ovs/releases/download/${OVS_VERSION}-${OVS_SUBVERSION}/openvswitch-${OVS_VERSION}-${OVS_SUBVERSION}.el7.x86_64.rpm && \
+    rpm -ivh https://github.com/alauda/ovs/releases/download/${OVS_VERSION}-${OVS_SUBVERSION}/openvswitch-devel-${OVS_VERSION}-${OVS_SUBVERSION}.el7.x86_64.rpm && \
+    rpm -ivh https://github.com/alauda/ovs/releases/download/${OVS_VERSION}-${OVS_SUBVERSION}/ovn-${OVS_VERSION}-${OVS_SUBVERSION}.el7.x86_64.rpm && \
+    rpm -ivh https://github.com/alauda/ovs/releases/download/${OVS_VERSION}-${OVS_SUBVERSION}/ovn-vtep-${OVS_VERSION}-${OVS_SUBVERSION}.el7.x86_64.rpm && \
+    rpm -ivh https://github.com/alauda/ovs/releases/download/${OVS_VERSION}-${OVS_SUBVERSION}/ovn-central-${OVS_VERSION}-${OVS_SUBVERSION}.el7.x86_64.rpm && \
+    rpm -ivh https://github.com/alauda/ovs/releases/download/${OVS_VERSION}-${OVS_SUBVERSION}/ovn-host-${OVS_VERSION}-${OVS_SUBVERSION}.el7.x86_64.rpm
+
+RUN mkdir -p /var/run/openvswitch
+WORKDIR /kube-ovn
+
+CMD ["sh", "start-webhook.sh"]
+
+COPY dist/images/start-webhook.sh /kube-ovn/start-webhook.sh
+COPY --from=builder /kube-ovn/dist/images/kube-ovn-webhook /kube-ovn/kube-ovn-webhook
