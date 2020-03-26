@@ -14,6 +14,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/klog"
+	virtv1 "kubevirt.io/client-go/api/v1"
 	ctrl "sigs.k8s.io/controller-runtime"
 	ctrlwebhook "sigs.k8s.io/controller-runtime/pkg/webhook"
 )
@@ -30,6 +31,7 @@ func init() {
 	corev1.AddToScheme(scheme)
 	appsv1.AddToScheme(scheme)
 	ovnv1.AddToScheme(scheme)
+	virtv1.AddToScheme(scheme)
 }
 
 func main() {
